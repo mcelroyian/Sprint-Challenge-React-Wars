@@ -7,94 +7,67 @@ const App = () => {
   // Try to think through what state you'll need for this app before starting. Then build out
   // the state properties here.
 
-const [currentChar, setCurrentChar] = useState({})
+
 const [characters, setCharacters] = useState(null)
-const [next, setNext] = useState(null)
-const [prev, setPrev] = useState(null)
+const [xxtra, setXxtra] = useState(null)
 const [query, setQuery] = useState('https://swapi.py4e.com/api/people/')
-const [homeQuery, setHomeQuery] = useState(null)
-const [speciesQuery, setSpeciesQuery] = useState(null)
 
+const getQuery = (url) => axios.get(url)
 
-//For each Character
-// make a new request for homeworld and species.
-// save to state. 
-// pass to Character component
-
-const createCharacter = (characters) => {
-  let list = ''
-  characters.map(char => {
-    getExtraData(char)
-    list = list + `<Character hometown=${currentChar.hometown}  species=${currentChar.species} key=${char.created} char=${char} />`
-    debugger
-  })
-  return list
+//search for match obj value of needle in array haystack
+const findMatch = (needle, haystack) => {
+  let match = haystack.filter(entry => entry.data.url === needle )
+  if (match) return match[0].data.name
+  return  "match not found"
 }
 
-const getExtraData = (character) => {
-  setHomeQuery(character.homeworld)
-  setSpeciesQuery(character.species[0])
+//homeworld
+//let homeworld =  findMatch(characters[0].homeworld, xxtra)
 
-}
 
 useEffect(() => {
-  const getData = () => {
-    axios.get(speciesQuery)
-    .then( res => {
-      let newState = {...currentChar, species: res.data[0].name}
-      setCurrentChar(newState)
-    })
-    .catch( err => {
-      console.log(err)
-    })
-  }
-  getData();
-}, [speciesQuery, currentChar])
-
-useEffect(() => {
-  function getData() {
-    axios.get(homeQuery)
-    .then( res => {
-      let newState = {...currentChar, hometown: res.data.name}
-      setCurrentChar(newState)
-    })
-    .catch( err => {
-      console.log(err)
-    })
-  }
-  getData();
-}, [homeQuery, currentChar])
-
-useEffect(() => {
-  const fetchData = () => {
-    axios.get(query)
-    .then( res => {
-      setCharacters(res.data.results)
-      getExtraData(res.data.results[0])
-    })
-    .catch( err => {
-      console.log(err)
-    })
-  }
-  fetchData();
-  
-  
-},[])
+  axios.get(query)
+      .then(res => {
+        let charList = res.data.results
+          // Add array of characters to characters STATE
+          setCharacters(charList)
+          // Create array of axios calls 
+          let extraUrls = charList.flatMap(char => [char.homeworld, char.species[0]] )
+          // Remove duplicates
+          let uniqueUrls = Array.from(new Set(extraUrls))
+          let axiosCalls = uniqueUrls.map(url => getQuery(url))
+          // return the axios calls
+          return axios.all(axiosCalls)
+      })
+      .then((data) => {
+        setXxtra(data)
+      })
+      .catch(err => {
+          debugger
+      })
+}, [])
 
 
 
   // Fetch characters from the API in an effect hook. Remember, anytime you have a 
   // side effect in a component, you want to think about which state and/or props it should
   // sync up with, if any.
-  //if (!characters || !currentChar.homeworld || !currentChar.species) return <h2>loading</h2>
+  if (!characters || !xxtra) return <h2>loading</h2>
 
   return (
     <div className="App">
       <h1 className="Header">Characters</h1>
       <div className="wrapper">
     {
-      characters && createCharacter(characters)
+
+      characters &&  characters.map( (char, i) => {
+        let homeworld = findMatch(char.homeworld, xxtra)
+        let species = findMatch(char.species[0], xxtra)
+        
+        return <Character key={i} char={char} homeworld={homeworld} species={species} />
+    })
     }
+
     </div>
     </div>
   );

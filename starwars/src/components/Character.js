@@ -17,8 +17,8 @@ const Character = props => {
                             <ListGroupItem>Hair Color: {hair_color}</ListGroupItem>
                             <ListGroupItem>Skin Color: {skin_color}</ListGroupItem>
                             <ListGroupItem>Eye Color: {eye_color}</ListGroupItem>
-                            <ListGroupItem>Species: TBD</ListGroupItem>
-                            <ListGroupItem>HomeWorld: TBD</ListGroupItem>
+                            <ListGroupItem>Species: {props.species}</ListGroupItem>
+                            <ListGroupItem>HomeWorld: {props.homeworld}</ListGroupItem>
                         </ListGroup>
                 </CardBody>
             </Card>
