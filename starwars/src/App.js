@@ -21,54 +21,79 @@ const [speciesQuery, setSpeciesQuery] = useState(null)
 // save to state. 
 // pass to Character component
 
+const createCharacter = (characters) => {
+  let list = ''
+  characters.map(char => {
+    getExtraData(char)
+    list = list + `<Character hometown=${currentChar.hometown}  species=${currentChar.species} key=${char.created} char=${char} />`
+    debugger
+  })
+  return list
+}
+
 const getExtraData = (character) => {
+  setHomeQuery(character.homeworld)
+  setSpeciesQuery(character.species[0])
 
 }
 
 useEffect(() => {
   const getData = () => {
-    axios.get(query)
+    axios.get(speciesQuery)
     .then( res => {
-      setSpeciesQuery(res.data.results)
+      let newState = {...currentChar, species: res.data[0].name}
+      setCurrentChar(newState)
+    })
+    .catch( err => {
+      console.log(err)
     })
   }
   getData();
-}, [speciesQuery])
+}, [speciesQuery, currentChar])
 
 useEffect(() => {
-  const getData = () => {
-    axios.get(query)
+  function getData() {
+    axios.get(homeQuery)
     .then( res => {
-      setHomeQuery(res.data.results)
+      let newState = {...currentChar, hometown: res.data.name}
+      setCurrentChar(newState)
+    })
+    .catch( err => {
+      console.log(err)
     })
   }
   getData();
-}, [homeQuery])
+}, [homeQuery, currentChar])
 
 useEffect(() => {
   const fetchData = () => {
     axios.get(query)
     .then( res => {
       setCharacters(res.data.results)
-      setNext(res.data.next)
+      getExtraData(res.data.results[0])
+    })
+    .catch( err => {
+      console.log(err)
     })
   }
   fetchData();
   
-}, [query])
+  
+},[])
 
 
 
   // Fetch characters from the API in an effect hook. Remember, anytime you have a 
   // side effect in a component, you want to think about which state and/or props it should
   // sync up with, if any.
+  //if (!characters || !currentChar.homeworld || !currentChar.species) return <h2>loading</h2>
 
   return (
     <div className="App">
       <h1 className="Header">Characters</h1>
       <div className="wrapper">
     {
-      characters && characters.map(char => <Character key={char.created} char={char} />)
+      characters && createCharacter(characters)
     }
     </div>
     </div>
